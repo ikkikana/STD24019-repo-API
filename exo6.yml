@@ -1,0 +1,48 @@
+openapi: 3.0.3
+info:
+  title: Exercise 6 - Auth & 404 Catch-All
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+paths:
+  /ping/auth:
+    get:
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: Pong for authenticated consumer
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: pong
+        401:
+          description: Invalid Authorization header
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Invalid Authorization header
+  /{full_path}:
+    get:
+      summary: Catch-all route for undefined paths
+      parameters:
+        - in: path
+          name: full_path
+          required: true
+          schema:
+            type: string
+      responses:
+        404:
+          description: Not Found page
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <html><body><h1>404 NOT FOUND</h1></body></html>
