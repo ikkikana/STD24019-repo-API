@@ -1,15 +1,16 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Exercise 1 - Ping
+  title: Ping Pong
   version: 1.0.0
-servers:
-  - url: http://localhost:8000
+  description: Ecriture d'une API simple qui retourne Pong
+
 paths:
   /ping:
     get:
+      summary: Teste la disponibilité de l'API
       responses:
-        200:
-          description: pong
+        '200':
+          description: Pong !
           content:
             text/plain:
               schema:
