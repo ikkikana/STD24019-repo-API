@@ -1,45 +1,177 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Exercise 5 - Update or Create Posts
+  title: API Produits & Commandes
   version: 1.0.0
+
+tags:
+  - name: Products
+    description: Routes pour la gestion des produits
+  - name: Orders
+    description: Routes pour la gestion des commandes
+
 servers:
-  - url: http://localhost:8000
+  - url: https://api.exemple.com
+
 paths:
-  /posts:
-    put:
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: object
-                properties:
-                  author:
-                    type: string
-                  title:
-                    type: string
-                  content:
-                    type: string
-                  creation_datetime:
-                    type: string
-                    format: date-time
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Rechercher des produits
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/QParam'
       responses:
-        201:
-          description: Updated list of posts (insert or update)
+        '200':
+          description: Liste des produits trouvés
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  type: object
-                  properties:
-                    author:
-                      type: string
-                    title:
-                      type: string
-                    content:
-                      type: string
-                    creation_datetime:
-                      type: string
-                      format: date-time
+                  $ref: '#/components/schemas/Product'
+              examples:
+                plusieurs-produits:
+                  summary: Résultat avec plusieurs produits
+                  value:
+                    - name: "Pomme"
+                      expiration_datetime: "2025-10-01T12:00:00Z"
+                      price: 1.99
+                    - name: "Banane"
+                      expiration_datetime: "2025-09-15T08:00:00Z"
+                      price: 0.99
+                aucun-produit:
+                  summary: Résultat vide
+                  value: []
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Liste paginée des commandes
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Liste des commandes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+              examples:
+                exemple-commande:
+                  summary: Commandes exemple
+                  value:
+                    - identifier: 1
+                      customer_name: "Jean Dupont"
+                      creation_datetime: "2025-08-20T10:30:00Z"
+                      total_amount: 59.90
+
+    post:
+      tags:
+        - Orders
+      summary: Créer une nouvelle commande
+      security:
+        - BasicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+            examples:
+              creation-commande:
+                summary: Exemple de commande à créer
+                value:
+                  identifier: 2
+                  customer_name: "Claire Martin"
+                  creation_datetime: "2025-08-25T14:00:00Z"
+                  total_amount: 99.50
+      responses:
+        '201':
+          description: Commande créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        example: 10
+      required: false
+      description: Nombre maximum de produits à retourner
+
+    QParam:
+      name: q
+      in: query
+      schema:
+        type: string
+        example: pomme
+      required: false
+      description: Terme de recherche pour filtrer les produits
+
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        example: 1
+      required: false
+      description: Numéro de la page à récupérer
+
+    SizeParam:
+      name: size
+      in: query
+      schema:
+        type: integer
+        example: 20
+      required: false
+      description: Nombre d’éléments par page
+
+  schemas:
+    Product:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Pomme"
+        expiration_datetime:
+          type: string
+          format: date-time
+          example: "2025-10-01T12:00:00Z"
+        price:
+          type: number
+          format: float
+          example: 1.99
+
+    Order:
+      type: object
+      properties:
+        identifier:
+          type: integer
+          example: 1
+        customer_name:
+          type: string
+          example: "Jean Dupont"
+        creation_datetime:
+          type: string
+          format: date-time
+          example: "2025-08-20T10:30:00Z"
+        total_amount:
+          type: number
+          format: float
+          example: 59.90
+
