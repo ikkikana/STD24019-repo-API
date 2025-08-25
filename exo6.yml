@@ -1,48 +1,218 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Exercise 6 - Auth & 404 Catch-All
+  title: API de gestion des profils utilisateur
   version: 1.0.0
-servers:
-  - url: http://localhost:8000
+
 paths:
-  /ping/auth:
+  /users/{id}:
     get:
+      summary: Obtenir un profil utilisateur complet
       parameters:
-        - in: header
-          name: Authorization
-          schema:
-            type: string
-          required: true
+        - $ref: '#/components/parameters/UserId'
       responses:
-        200:
-          description: Pong for authenticated consumer
+        '200':
+          description: Profil utilisateur
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: pong
-        401:
-          description: Invalid Authorization header
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                exemple:
+                  value:
+                    identifier: "u123"
+                    first_name: "Alice"
+                    last_name: "Dupont"
+                    birthdate: "1990-05-12"
+                    email: "alice@example.com"
+                    address_street: "10 rue des Lilas"
+                    address_city: "Paris"
+                    address_country: "France"
+                    address_postal_code: "75000"
+                    needs_newsletter: true
+                    language: "fr"
+
+  /users:
+    post:
+      summary: Créer une liste de profils utilisateurs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/CreateUserProfile'
+            examples:
+              exemple-creation:
+                value:
+                  - first_name: "Alice"
+                    last_name: "Dupont"
+                    birthdate: "1990-05-12"
+                    email: "alice@example.com"
+                    address_street: "10 rue des Lilas"
+                    address_city: "Paris"
+                    address_country: "France"
+                    address_postal_code: "75000"
+                    needs_newsletter: true
+                    language: "fr"
+      responses:
+        '201':
+          description: Liste des utilisateurs créés avec identifiants
           content:
-            text/plain:
+            application/json:
               schema:
-                type: string
-                example: Invalid Authorization header
-  /{full_path}:
-    get:
-      summary: Catch-all route for undefined paths
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+
+  /users/{id}/personalInfo:
+    put:
+      summary: Met à jour les informations personnelles
       parameters:
-        - in: path
-          name: full_path
-          required: true
-          schema:
-            type: string
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalInfo'
+            examples:
+              update-info:
+                value:
+                  first_name: "Alice"
+                  last_name: "Martin"
+                  birthdate: "1990-05-12"
+                  email: "alice.martin@example.com"
       responses:
-        404:
-          description: Not Found page
+        '200':
+          description: Informations personnelles mises à jour
           content:
-            text/html:
+            application/json:
               schema:
-                type: string
-                example: |
-                  <html><body><h1>404 NOT FOUND</h1></body></html>
+                $ref: '#/components/schemas/UserProfile'
+
+  /users/{id}/address:
+    put:
+      summary: Met à jour l'adresse de l'utilisateur
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Address'
+            examples:
+              update-address:
+                value:
+                  address_street: "20 avenue Victor Hugo"
+                  address_city: "Lyon"
+                  address_country: "France"
+                  address_postal_code: "69000"
+      responses:
+        '200':
+          description: Adresse mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /users/{id}/preferences:
+    put:
+      summary: Met à jour les préférences de l'utilisateur
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preferences'
+            examples:
+              update-preferences:
+                value:
+                  needs_newsletter: false
+                  language: "eng"
+      responses:
+        '200':
+          description: Préférences mises à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+components:
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Identifiant unique de l'utilisateur
+
+  schemas:
+    UserProfile:
+      allOf:
+        - $ref: '#/components/schemas/Identifier'
+        - $ref: '#/components/schemas/PersonalInfo'
+        - $ref: '#/components/schemas/Address'
+        - $ref: '#/components/schemas/Preferences'
+
+    CreateUserProfile:
+      allOf:
+        - $ref: '#/components/schemas/PersonalInfo'
+        - $ref: '#/components/schemas/Address'
+        - $ref: '#/components/schemas/Preferences'
+
+    Identifier:
+      type: object
+      properties:
+        identifier:
+          type: string
+          example: u123
+
+    PersonalInfo:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: Alice
+        last_name:
+          type: string
+          example: Dupont
+        birthdate:
+          type: string
+          format: date
+          example: "1990-05-12"
+        email:
+          type: string
+          format: email
+          example: alice@example.com
+
+    Address:
+      type: object
+      properties:
+        address_street:
+          type: string
+          example: "10 rue des Lilas"
+        address_city:
+          type: string
+          example: "Paris"
+        address_country:
+          type: string
+          example: "France"
+        address_postal_code:
+          type: string
+          example: "75000"
+
+    Preferences:
+      type: object
+      properties:
+        needs_newsletter:
+          type: boolean
+          example: true
+        language:
+          type: string
+          enum: [mg, fr, eng]
+          example: fr
